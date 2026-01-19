@@ -7,42 +7,50 @@ import json
 import re
 import os
 
-# Get directory of this script
+# Get directory of this script (Code/Gateway/Main)
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# Get parent directory (Code/Gateway)
+# Get Gateway directory (Code/Gateway)
 gateway_dir = os.path.dirname(current_dir)
+# Get Code directory
+code_dir = os.path.dirname(gateway_dir)
+# Get Root directory
+root_dir = os.path.dirname(code_dir)
 
-# Helper function to get paths
-def get_path(path_suffix):
+# Helper function to get certificate paths (in Energy_Meters at root)
+def get_key_path(path_suffix):
+    return os.path.join(root_dir, "Energy_Meters", path_suffix)
+
+# Helper function to get script paths (in Code/Gateway)
+def get_script_path(path_suffix):
     return os.path.join(gateway_dir, path_suffix)
 
 # Device 1 AWS IoT configuration
 aws_endpoint_1 = "endpoint"
 aws_publish_topic_1 = "Energy_Meter/Energy_Meter_1"
-cert_filepath_1 = get_path("Sub/Dev1/Keys/Energy_Meter_1.crt")
-key_filepath_1 = get_path("Sub/Dev1/Keys/Energy_Meter_1.key")
-ca_filepath_1 = get_path("Sub/Dev1/Keys/rootCA.pem")
+cert_filepath_1 = get_key_path("Sub/Dev1/Keys/Energy_Meter_1.crt")
+key_filepath_1 = get_key_path("Sub/Dev1/Keys/Energy_Meter_1.key")
+ca_filepath_1 = get_key_path("Sub/Dev1/Keys/rootCA.pem")
 
 # Device 2 AWS IoT configuration
 aws_endpoint_2 = "endpoint"
 aws_publish_topic_2 = "Energy_Meter/Energy_Meter_2"
-cert_filepath_2 = get_path("Sub/Dev2/Keys/Energy_Meter_2.crt")
-key_filepath_2 = get_path("Sub/Dev2/Keys/Energy_Meter_2.key")
-ca_filepath_2 = get_path("Sub/Dev2/Keys/rootCA.pem")
+cert_filepath_2 = get_key_path("Sub/Dev2/Keys/Energy_Meter_2.crt")
+key_filepath_2 = get_key_path("Sub/Dev2/Keys/Energy_Meter_2.key")
+ca_filepath_2 = get_key_path("Sub/Dev2/Keys/rootCA.pem")
 
 # Device 3 AWS IoT configuration
 aws_endpoint_3 = "endpoint"
 aws_publish_topic_3 = "Energy_Meter/Energy_Meter_3"
-cert_filepath_3 = get_path("Sub/Dev3/Keys/Energy_Meter_3.crt")
-key_filepath_3 = get_path("Sub/Dev3/Keys/Energy_Meter_3.key")
-ca_filepath_3 = get_path("Sub/Dev3/Keys/rootCA.pem")
+cert_filepath_3 = get_key_path("Sub/Dev3/Keys/Energy_Meter_3.crt")
+key_filepath_3 = get_key_path("Sub/Dev3/Keys/Energy_Meter_3.key")
+ca_filepath_3 = get_key_path("Sub/Dev3/Keys/rootCA.pem")
 
 # Device 4 AWS IoT configuration
 aws_endpoint_4 = "endpoint"
 aws_publish_topic_4 = "Energy_Meter/Energy_Meter_4"
-cert_filepath_4 = get_path("Sub/Dev4/Keys/Energy_Meter_4.crt")
-key_filepath_4 = get_path("Sub/Dev4/Keys/Energy_Meter_4.key")
-ca_filepath_4 = get_path("Sub/Dev4/Keys/rootCA.pem")
+cert_filepath_4 = get_key_path("Sub/Dev4/Keys/Energy_Meter_4.crt")
+key_filepath_4 = get_key_path("Sub/Dev4/Keys/Energy_Meter_4.key")
+ca_filepath_4 = get_key_path("Sub/Dev4/Keys/rootCA.pem")
 
 # AWS IoT MQTT connection setup for Device 1
 mqtt_connection_1 = mqtt_connection_builder.mtls_from_path(
@@ -196,7 +204,7 @@ def parse_output1(output):
     
 def run_program1():
     # Path to the program
-    node1_path = get_path('Sub/Dev1/Code/Device1.py')
+    node1_path = get_script_path('Sub/Dev1/Code/Device1.py')
     
     # Run the program using subprocess
     result = subprocess.run(['python3', node1_path], capture_output=True, text=True)
@@ -266,7 +274,7 @@ def parse_output2(output):
     
 def run_program2():
     # Path to the program
-    node1_path = get_path('Sub/Dev2/Code/Device2.py')
+    node1_path = get_script_path('Sub/Dev2/Code/Device2.py')
     
     # Run the program using subprocess
     result = subprocess.run(['python3', node1_path], capture_output=True, text=True)
@@ -336,7 +344,7 @@ def parse_output3(output):
     
 def run_program3():
     # Path to the program
-    node1_path = get_path('Sub/Dev3/Code/Device3.py')
+    node1_path = get_script_path('Sub/Dev3/Code/Device3.py')
     
     # Run the program using subprocess
     result = subprocess.run(['python3', node1_path], capture_output=True, text=True)
@@ -406,7 +414,7 @@ def parse_output4(output):
     
 def run_program4():
     # Path to the program
-    node1_path = get_path('Sub/Dev4/Code/Device4.py')
+    node1_path = get_script_path('Sub/Dev4/Code/Device4.py')
     
     # Run the program using subprocess
     result = subprocess.run(['python3', node1_path], capture_output=True, text=True)

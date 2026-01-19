@@ -29,8 +29,11 @@ rfm9x.tx_power = 23
 rfm9x.spreading_factor = 8  # Set the spreading factor to SF=8
 
 # Define log directory
+# Current: Code/Gateway/Sub/Dev4/Code/Device4.py
 current_dir = os.path.dirname(os.path.abspath(__file__))
-log_base_dir = os.path.join(os.path.dirname(current_dir), 'Logs')
+# Root: Go up 5 levels
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))))
+log_base_dir = os.path.join(root_dir, 'Energy_Meters/Sub/Dev4/Logs')
 
 # InfluxDB configuration
 influxdb_url = 'http://localhost:8086'
