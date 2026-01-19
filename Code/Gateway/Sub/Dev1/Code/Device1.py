@@ -29,7 +29,8 @@ rfm9x.tx_power = 23
 rfm9x.spreading_factor = 8  # Set the spreading factor to SF=8
 
 # Define log directory
-log_base_dir = 'Energy_Meters/Sub/Dev1/Logs'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+log_base_dir = os.path.join(os.path.dirname(current_dir), 'Logs')
 
 # InfluxDB configuration
 influxdb_url = 'http://localhost:8086'
@@ -137,4 +138,3 @@ time.sleep(1)  # Wait for a short period to allow the message to be transmitted
 
 # Receive and process any incoming messages
 receive_message()
-
