@@ -1,0 +1,6 @@
+awscrt
+awsiot
+adafruit-circuitpython-rfm9x
+influxdb-client
+adafruit-blinka
+board

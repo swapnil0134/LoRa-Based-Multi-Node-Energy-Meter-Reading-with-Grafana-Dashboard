@@ -1,43 +1,108 @@
-# LoRa-Based-Multi-Node-Energy-Meter-Reading-with-Grafana-Dashboard
-This repository contains a comprehensive solution for remotely monitoring energy usage across multiple nodes using LoRa (Long Range) technology. The system is designed for efficient communication between energy meters and a central gateway, allowing users to access real-time data through a Grafana dashboard.
+# LoRa-Based Multi-Node Energy Meter Reading
 
-Key Features:
+This repository contains a comprehensive solution for remotely monitoring energy usage across multiple nodes using LoRa (Long Range) technology. The system monitors energy parameters (Voltage, Current, Power, Power Factor, Frequency, etc.) from multiple energy meter nodes and transmits them to a central gateway, which forwards the data to AWS IoT Core and a local InfluxDB instance for visualization in Grafana.
 
-    Multi-Node Support: Multiple energy meters can be monitored simultaneously, making the system scalable for various applications.
-    LoRa Communication: Utilizes LoRa technology for long-range data transmission, ensuring reliable connectivity even in challenging environments.
-    Data Visualization: Integrated with Grafana for intuitive and insightful data visualization, enabling users to track energy consumption trends and patterns over time.
-    Modbus Protocol: Compatible with Modbus-enabled energy meters, allowing seamless integration with existing infrastructure.
+## System Overview
 
-Project Structure:
+The system is designed for efficient communication between Modbus-enabled energy meters and a central gateway. It uses LoRa for long-range, low-power wireless communication, making it suitable for industrial or distributed environments.
 
-    Node Code: The firmware for each energy meter node, responsible for collecting data and transmitting it via LoRa.
-    Gateway Code: The firmware for the central gateway, which receives data from nodes and forwards it to the Grafana dashboard.
-    Grafana Dashboard Configuration: Instructions for setting up the Grafana dashboard to visualize the data collected from the energy meters.
+**Key Features:**
+*   **Multi-Node Support:** Monitors multiple energy meters simultaneously.
+*   **LoRa Communication:** Reliable long-range wireless data transmission.
+*   **Dual Data Publishing:** Publishes data to **AWS IoT Core** (cloud) and **InfluxDB** (local/remote time-series database).
+*   **Real-time Visualization:** Grafana dashboard for monitoring Voltage, Current, Power, Energy Consumption, etc.
+*   **Modbus Compatibility:** Works with SDM72D-M and similar Modbus RTU energy meters.
 
-Gateway Code Overview:
+## Architecture
 
-    The gateway code is responsible for connecting to AWS IoT and publishing energy data from multiple energy meter nodes. It employs the AWS IoT Core MQTT protocol for reliable message delivery. Here’s a breakdown of the key components of the gateway code:
-    AWS IoT Configuration
+**Data Flow:**
+```
+[Energy Meter] <--(RS485/Modbus)--> [Node (ESP32 + LoRa)] <--(LoRa Wireless)--> [Gateway (RPi + LoRa)]
+                                                                                      |
+                                                                       +--------------+--------------+
+                                                                       |                             |
+                                                                 [AWS IoT Core]                 [InfluxDB]
+                                                                       |                             |
+                                                                 (Cloud Analysis)                [Grafana]
+                                                                                             (Visualization)
+```
 
-Each energy meter node has its own AWS IoT configuration, including:
+## Hardware Components
 
-    Endpoint: The AWS IoT endpoint to which the gateway connects.
-    Publish Topic: The topic under which the energy meter data will be published.
-    Certificates: Each device has its own certificate, private key, and CA file for secure communication.
+1.  **Sensor Nodes (End Devices):**
+    *   **Microcontroller:** ESP32
+    *   **Communication:** LoRa Module (e.g., RFM95/SX1276) operating at 868 MHz.
+    *   **Sensor:** Energy Meter (e.g., SDM72D-M) communicating via RS485 (Modbus RTU).
+    *   **Role:** Reads data from the meter upon request and transmits it via LoRa.
 
-MQTT Connection Setup:
+2.  **Gateway:**
+    *   **Host:** Raspberry Pi or Linux-based Single Board Computer.
+    *   **Communication:** LoRa Module (e.g., RFM95/SX1276) connected via SPI.
+    *   **Role:** Polling master. It requests data from each node sequentially, receives the response, and publishes it to MQTT (AWS IoT) and InfluxDB.
 
-    The code establishes an MQTT connection for each energy meter node using the mqtt_connection_builder provided by the AWS IoT SDK. It includes connection callbacks to handle connection interruptions and resumptions.
+## Software Components
 
+*   **Node Firmware (`Code/Nodes/`):**
+    *   Written in C++ (Arduino Framework).
+    *   Uses `LoRa` library for wireless and `ModbusMaster` for meter communication.
+*   **Gateway Software (`Code/Gateway/`):**
+    *   **`Main.py`**: The orchestrator script. It loops through defined devices, triggers their respective handler scripts, and publishes formatted JSON data to AWS IoT Core.
+    *   **`DeviceX.py`**: Device-specific scripts that handle the low-level LoRa handshake ("DeviceX" request -> Data response) and write data to InfluxDB.
+*   **Visualization (`Dashboard/`):**
+    *   **`Dashboard.json`**: A Grafana dashboard JSON model file to visualize the energy metrics.
 
-Data Processing:
+## Configuration & Setup
 
-    The gateway retrieves data from each energy meter by executing a Python script (DeviceX.py) using the subprocess module. It parses the output using regular expressions to extract relevant metrics such as voltage, current, power factor, and frequency.
+### 1. Prerequisites
+*   Python 3.7+ installed on the Gateway.
+*   Arduino IDE for flashing Nodes.
+*   InfluxDB (running on `localhost:8086` or configurable).
+*   AWS IoT Core account and provisioned Things.
 
-Publishing Data:
+### 2. Gateway Setup
 
-    The parsed data is then formatted into JSON and published to the respective AWS IoT topic. The gateway handles potential errors during the publishing process and logs the results.
+1.  **Install Dependencies:**
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+    *Required libraries: `awscrt`, `awsiot`, `adafruit-circuitpython-rfm9x`, `influxdb-client`, `adafruit-blinka`, `board`.*
 
-Main Loop:
+2.  **Configure AWS IoT Certificates:**
+    *   Place your AWS IoT certificates and keys in the `Code/Gateway/Sub/DevX/Keys/` directories.
+    *   Ensure filenames match those expected in `Code/Gateway/Main/Main.py` (or update `Main.py` to match your filenames).
 
-    The main_loop function runs indefinitely, continuously polling data from each energy meter at specified intervals.
+3.  **Configure InfluxDB:**
+    *   Ensure InfluxDB is running.
+    *   Update `Code/Gateway/Sub/DevX/Code/DeviceX.py` with your InfluxDB credentials (URL, Token, Org, Bucket).
+
+### 3. Node Setup
+
+1.  **Open Firmware:** Open `Code/Nodes/Device1/Device1.ino` in Arduino IDE.
+2.  **Libraries:** Install `LoRa` by Sandeep Mistry and `ModbusMaster` libraries.
+3.  **LoRa Settings:** Ensure Frequency (868E6), Spreading Factor (8), and Bandwidth (125E3) match the Gateway settings in `DeviceX.py`.
+4.  **Flash:** Upload the code to your ESP32 boards. *Note: Ensure each node listens for its unique ID (e.g., "Device1", "Device2").*
+
+### 4. Grafana Dashboard
+
+1.  Login to your Grafana instance.
+2.  Add **InfluxDB** as a data source (Flux language).
+3.  Import `Dashboard/Dashboard.json`.
+
+## Usage
+
+To start the Gateway application:
+
+```bash
+python3 Code/Gateway/Main/Main.py
+```
+
+The system will start polling Device 1, then Device 2, etc., in a loop. Logs will be printed to the console and saved in `Code/Gateway/Sub/DevX/Logs/`.
+
+## Directory Structure
+
+*   `Code/Gateway/`: Python code for the Gateway.
+    *   `Main/`: Contains the main execution script.
+    *   `Sub/`: Contains device-specific scripts, keys, and logs.
+*   `Code/Nodes/`: Arduino firmware for the sensor nodes.
+*   `Dashboard/`: Grafana dashboard configuration.
+*   `Circuit Diagrams/`: Hardware schematics.
