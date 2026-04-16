@@ -141,7 +141,7 @@ pip3 install adafruit-circuitpython-rfm9x
 
 #### 1. Clone Repository
 ```bash
-git clone https://github.com/your-repo/LoRa-Based-Multi-Node-Energy-Meter-Reading-with-Grafana-Dashboard.git
+git clone https://github.com/swapnil0134/LoRa-Based-Multi-Node-Energy-Meter-Reading-with-Grafana-Dashboard.git
 cd LoRa-Based-Multi-Node-Energy-Meter-Reading-with-Grafana-Dashboard
 ```
 
